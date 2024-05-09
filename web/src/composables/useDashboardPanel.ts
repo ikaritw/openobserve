@@ -141,7 +141,7 @@ const getDefaultDashboardPanelData: any = () => ({
 });
 
 let dashboardPanelDataObj: any = reactive({
-  dashboard: { ...getDefaultDashboardPanelData() },
+  dashboard: reactive({ ...getDefaultDashboardPanelData() }),
 });
 
 const useDashboardPanelData = (pageKey: string = "dashboard") => {
@@ -150,10 +150,12 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
 
   // Initialize the state for this page key if it doesn't already exist
   if (!dashboardPanelDataObj[pageKey]) {
-    dashboardPanelDataObj[pageKey] = { ...getDefaultDashboardPanelData() };
+    dashboardPanelDataObj[pageKey] = reactive({
+      ...getDefaultDashboardPanelData(),
+    });
   }
 
-  const dashboardPanelData = dashboardPanelDataObj[pageKey];
+  const dashboardPanelData = reactive(dashboardPanelDataObj[pageKey]);
 
   const cleanupDraggingFields = () => {
     dashboardPanelData.meta.dragAndDrop.currentDragArea = null;
@@ -1815,7 +1817,6 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
       } else {
         query = sqlchart();
       }
-      console.log("query", query);
       dashboardPanelData.data.queries[
         dashboardPanelData.layout.currentQueryIndex
       ].query = query;
@@ -1873,11 +1874,7 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
         ].customQuery &&
         dashboardPanelData.data.queryType === "sql"
       ) {
-        console.log("if condition");
-
         makeAutoSQLQuery();
-      } else {
-        console.log("else condition");
       }
     },
     { deep: true }
