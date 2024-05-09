@@ -140,9 +140,9 @@ const getDefaultDashboardPanelData: any = () => ({
   },
 });
 
-let dashboardPanelDataObj: any = reactive({
+let dashboardPanelDataObj: any = {
   dashboard: reactive({ ...getDefaultDashboardPanelData() }),
-});
+};
 
 const useDashboardPanelData = (pageKey: string = "dashboard") => {
   const store = useStore();
@@ -1808,7 +1808,6 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
       ].customQuery &&
       dashboardPanelData.data.queryType == "sql"
     ) {
-      
       let query = "";
       if (dashboardPanelData.data.type == "geomap") {
         query = geoMapChart();
