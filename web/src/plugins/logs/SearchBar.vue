@@ -252,6 +252,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           :label="t('search.quickModeLabel')"
           @click="handleQuickMode"
         />
+        <q-btn-toggle
+          class="q-ml-xs no-outline q-pa-none no-border"
+          v-model="searchObj.meta.logsVisualizeToggle"
+          style="margin-left: 5px"
+          no-caps
+          padding="3px"
+          toggle-color="primary"
+          :options="[
+            { label: 'Logs', value: 'logs' },
+            { label: 'Visualize', value: 'visualize' },
+          ]"
+        />
       </div>
       <div class="float-right col-auto q-mb-xs">
         <q-toggle
@@ -461,7 +473,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               flat
               :title="t('search.runQuery')"
               class="q-pa-none search-button"
-              @click="handleRunQuery"
+              @click="handleRunQueryFn"
               :disable="
                 searchObj.loading == true || searchObj.loadingHistogram == true
               "
@@ -490,7 +502,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               :keywords="autoCompleteKeywords"
               :suggestions="autoCompleteSuggestions"
               @update:query="updateQueryValue"
-              @run-query="handleRunQuery"
+              @run-query="handleRunQueryFn"
               :class="
                 searchObj.data.editorValue == '' &&
                 searchObj.meta.queryEditorPlaceholderFlag
@@ -901,6 +913,7 @@ export default defineComponent({
     "onChangeInterval",
     "onChangeTimezone",
     "handleQuickModeChange",
+    "handleRunQueryFn",
   ],
   methods: {
     searchData() {
@@ -2244,7 +2257,7 @@ export default defineComponent({
       searchObj.data.editorValue = "";
       queryEditorRef.value.setValue(searchObj.data.query);
       if (store.state.zoConfig.query_on_stream_selection == false) {
-        handleRunQuery();
+        handleRunQueryFn();
       }
     };
 
@@ -2358,15 +2371,6 @@ export default defineComponent({
       emit("handleQuickModeChange");
     };
 
-    const regionFilterMethod = (node, filter) => {
-      const filt = filter.toLowerCase();
-      return node.label && node.label.toLowerCase().indexOf(filt) > -1;
-    };
-
-    const resetRegionFilter = () => {
-      regionFilter.value = "";
-    };
-
     return {
       t,
       store,
@@ -2395,6 +2399,7 @@ export default defineComponent({
       filterFn,
       refreshData,
       handleRunQuery,
+      handleRunQueryFn,
       autoCompleteKeywords,
       autoCompleteSuggestions,
       onRefreshIntervalUpdate,
@@ -2592,7 +2597,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #logsQueryEditor,
 #fnEditor {
   height: 100% !important;
@@ -2845,8 +2850,7 @@ export default defineComponent({
   min-width: 30px !important;
   max-width: 30px !important;
 }
-</style>
-<style lang="scss">
+
 .saved-view-table {
   td {
     padding: 0;
