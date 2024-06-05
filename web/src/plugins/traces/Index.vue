@@ -173,7 +173,6 @@ import { useRouter } from "vue-router";
 
 import useTraces from "@/composables/useTraces";
 
-import streamService from "@/services/stream";
 import searchService from "@/services/search";
 import TransformService from "@/services/jstransform";
 import {
@@ -663,11 +662,14 @@ export default defineComponent({
       delete req.aggs;
 
       searchService
-        .search({
-          org_identifier: searchObj.organizationIdetifier,
-          query: req,
-          page_type: "traces",
-        }, "UI")
+        .search(
+          {
+            org_identifier: searchObj.organizationIdetifier,
+            query: req,
+            page_type: "traces",
+          },
+          "UI"
+        )
         .then((res) => {
           searchObj.data.traceDetails.spanList = res.data?.hits || [];
         })

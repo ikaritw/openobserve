@@ -421,6 +421,14 @@ export default defineComponent({
         queryParams.stream_type !== searchObj.data.stream.streamType ||
         queryParams.stream !== searchObj.data.stream.selectedStream.value;
 
+      if (queryParams.type === "trace_explorer") {
+        resetSearchObj();
+        resetStreamData();
+        restoreUrlQueryParams();
+
+        return;
+      }
+
       if (
         isStreamChanged &&
         queryParams.type === "stream_explorer" &&
