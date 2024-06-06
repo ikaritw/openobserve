@@ -116,7 +116,8 @@
     "userDefinedSchemaLabel": "User Defined Schema",
     "allFieldsLabel": "All Fields",
     "allFieldsWarningMsg": "Searches can be slow when the number of fields in the schema are extremely high, please choose the required fields appropriately.",
-    "regionFilterMsg": "Search Region/Cluster"
+    "regionFilterMsg": "Search Region/Cluster",
+    "viewTrace": "View Trace"
   },
   "menu": {
     "home": "Home",

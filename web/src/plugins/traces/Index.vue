@@ -1139,6 +1139,10 @@ export default defineComponent({
     });
 
     onActivated(() => {
+      const params = router.currentRoute.value.query;
+      if (params.reload === "true") {
+        loadPageData();
+      }
       if (
         searchObj.organizationIdetifier !=
         store.state.selectedOrganization.identifier
