@@ -354,6 +354,9 @@ export default defineComponent({
       () => props.span,
       () => {
         spanDetails.value = getFormattedSpanDetails();
+      },
+      {
+        deep: true,
       }
     );
 
@@ -464,7 +467,7 @@ export default defineComponent({
         );
       spanDetails.attrs.span_kind = getSpanKind(spanDetails.attrs.span_kind);
 
-      spanDetails.events = JSON.parse(props.span.events).map(
+      spanDetails.events = JSON.parse(props.span.events || "[]").map(
         (event: any) => event
       );
 
