@@ -258,7 +258,8 @@ export default defineComponent({
     const router = useRouter();
     const $q = useQuasar();
     const { t } = useI18n();
-    const { searchObj, resetSearchObj } = useTraces();
+    const { searchObj, resetSearchObj, getUrlQueryParams, copyTracesUrl } =
+      useTraces();
     let refreshIntervalID = 0;
     const searchResultRef = ref(null);
     const searchBarRef = ref(null);
@@ -576,9 +577,11 @@ export default defineComponent({
         req.query.sql = b64EncodeUnicode(req.query.sql);
 
         const queryParams = getUrlQueryParams();
+
         router.push({ query: queryParams });
         return req;
       } catch (e) {
+        console.log(e);
         searchObj.loading = false;
         showErrorNotification("Invalid SQL Syntax");
       }
@@ -1104,68 +1107,6 @@ export default defineComponent({
           value: queryParams.stream,
         };
       }
-    }
-
-    const copyTracesUrl = (customTimeRange = null) => {
-      const queryParams = getUrlQueryParams(true);
-
-      if (customTimeRange) {
-        queryParams.from = customTimeRange.from;
-        queryParams.to = customTimeRange.to;
-      }
-
-      const queryString = Object.entries(queryParams)
-        .map(
-          ([key, value]) =>
-            `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
-        )
-        .join("&");
-
-      let shareURL = window.location.origin + window.location.pathname;
-
-      if (queryString != "") {
-        shareURL += "?" + queryString;
-      }
-
-      copyToClipboard(shareURL)
-        .then(() => {
-          $q.notify({
-            type: "positive",
-            message: "Link Copied Successfully!",
-            timeout: 5000,
-          });
-        })
-        .catch(() => {
-          $q.notify({
-            type: "negative",
-            message: "Error while copy link.",
-            timeout: 5000,
-          });
-        });
-    };
-
-    function getUrlQueryParams(getShareLink: false) {
-      const date = searchObj.data.datetime;
-      const query = {};
-
-      query["stream"] = selectedStreamName.value;
-
-      if (date.type == "relative" && !getShareLink) {
-        query["period"] = date.relativeTimePeriod;
-      } else {
-        query["from"] = date.startTime;
-        query["to"] = date.endTime;
-      }
-
-      query["query"] = b64EncodeUnicode(searchObj.data.editorValue);
-
-      query["filter_type"] = searchObj.meta.filterType;
-
-      query["org_identifier"] = store.state.selectedOrganization.identifier;
-
-      query["trace_id"] = router.currentRoute.value.query.trace_id;
-
-      return query;
     }
 
     const onSplitterUpdate = () => {
