@@ -584,99 +584,6 @@ export default defineComponent({
       }
     }
 
-    const openTraceDetails = () => {
-      searchObj.loading = true;
-      const queryReq = buildSearch();
-
-      let filter = searchObj.data.editorValue;
-
-      if (filter?.length)
-        filter += ` and trace_id='${router.currentRoute.value.query.trace_id}'`;
-      else filter += `trace_id='${router.currentRoute.value.query.trace_id}'`;
-
-      searchService
-        .get_traces({
-          org_identifier: searchObj.organizationIdetifier,
-          start_time: queryReq.query.start_time,
-          end_time: queryReq.query.end_time,
-          filter: filter || "",
-          size: 1,
-          from: 0,
-          stream_name: selectedStreamName.value,
-        })
-        .then(async (res) => {
-          const trace = getTracesMetaData(res.data.hits)[0];
-          if (!trace) {
-            showTraceDetailsError();
-            return;
-          }
-          searchObj.data.traceDetails.selectedTrace = trace;
-          getTraceDetails();
-        })
-        .catch(() => {
-          showTraceDetailsError();
-        })
-        .finally(() => {
-          searchObj.loading = false;
-        });
-    };
-
-    const showTraceDetailsError = () => {
-      showErrorNotification(
-        `Trace ${router.currentRoute.value.query.trace_id} not found`
-      );
-      const query = cloneDeep(router.currentRoute.value.query);
-      delete query.trace_id;
-      router.push({
-        name: "traces",
-        query: {
-          ...query,
-        },
-      });
-      return;
-    };
-
-    const buildTraceSearchQuery = (trace: string) => {
-      const req = getDefaultRequest();
-      req.query.from = 0;
-      req.query.size = 1000;
-      req.query.start_time = trace.trace_start_time - 30000000;
-      req.query.end_time = trace.trace_end_time + 30000000;
-
-      req.query.sql = b64EncodeUnicode(
-        `SELECT * FROM ${selectedStreamName.value} WHERE trace_id = '${trace.trace_id}' ORDER BY start_time`
-      );
-
-      return req;
-    };
-
-    const getTraceDetails = () => {
-      searchObj.meta.showTraceDetails = true;
-      searchObj.data.traceDetails.loading = true;
-      searchObj.data.traceDetails.spanList = [];
-      const req = buildTraceSearchQuery(
-        searchObj.data.traceDetails.selectedTrace
-      );
-
-      delete req.aggs;
-
-      searchService
-        .search(
-          {
-            org_identifier: searchObj.organizationIdetifier,
-            query: req,
-            page_type: "traces",
-          },
-          "UI"
-        )
-        .then((res) => {
-          searchObj.data.traceDetails.spanList = res.data?.hits || [];
-        })
-        .finally(() => {
-          searchObj.data.traceDetails.loading = false;
-        });
-    };
-
     const updateFieldValues = (data) => {
       const excludedFields = [store.state.zoConfig.timestamp_column];
       data.forEach((item) => {
@@ -1319,7 +1226,6 @@ export default defineComponent({
       updateGridColumns,
       getConsumableDateTime,
       runQueryFn,
-      getTraceDetails,
       verifyOrganizationStatus,
       fieldValues,
       onSplitterUpdate,
