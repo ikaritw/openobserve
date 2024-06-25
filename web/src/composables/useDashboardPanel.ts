@@ -2638,6 +2638,7 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
     validatePanel,
     currentXLabel,
     currentYLabel,
+    generateLabelFromName,
   };
 };
 export default useDashboardPanelData;
