@@ -18,7 +18,8 @@ import { useI18n } from "vue-i18n";
 import { reactive, ref, type Ref, toRaw, nextTick, onBeforeMount } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import { cloneDeep, remove } from "lodash-es";
+import { cloneDeep } from "lodash-es";
+import { tracer } from "@/utils/opentelemetry";
 
 import {
   useLocalLogFilterField,
@@ -1121,7 +1122,7 @@ const useLogs = () => {
               org_identifier: searchObj.organizationIdetifier,
               query: partitionQueryReq,
               page_type: searchObj.data.stream.streamType,
-              traceparent,
+              traceparent: getTraceParentHeader(),
             })
             .then(async (res) => {
               removeTraceId(traceId);
@@ -1776,7 +1777,7 @@ const useLogs = () => {
             org_identifier: searchObj.organizationIdetifier,
             query: queryReq,
             page_type: searchObj.data.stream.streamType,
-            traceparent,
+            traceparent: getTraceParentHeader(),
           },
           "UI"
         )
@@ -1912,7 +1913,7 @@ const useLogs = () => {
             org_identifier: searchObj.organizationIdetifier,
             query: queryReq,
             page_type: searchObj.data.stream.streamType,
-            traceparent,
+            traceparent: getTraceParentHeader(),
           },
           "UI"
         )
@@ -2191,7 +2192,7 @@ const useLogs = () => {
                 org_identifier: searchObj.organizationIdetifier,
                 query: queryReq,
                 page_type: searchObj.data.stream.streamType,
-                traceparent,
+                traceparent: getTraceParentHeader(),
               },
               "UI"
             )
@@ -3092,7 +3093,7 @@ const useLogs = () => {
             : "",
           is_multistream:
             searchObj.data.stream.selectedStream.length > 1 ? true : false,
-          traceparent,
+          traceparent: getTraceParentHeader(),
         })
         .then((res) => {
           removeTraceId(traceId);
@@ -3670,6 +3671,12 @@ const useLogs = () => {
         if (searchObj.loading) searchObj.loading = false;
         if (searchObj.loadingHistogram) searchObj.loadingHistogram = false;
       });
+  };
+
+  const getTraceParentHeader = () => {
+    return `00-${getUUID().replace(/-/g, "")}-${getUUID()
+      .replace(/-/g, "")
+      .slice(0, 16)}-01`;
   };
 
   return {
