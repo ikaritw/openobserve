@@ -600,14 +600,12 @@ import useDashboardPanelData from "../../../composables/useDashboardPanel";
 import { useLoading } from "@/composables/useLoading";
 import useStreams from "@/composables/useStreams";
 import { inject } from "vue";
-import { useLocalInterestingFields } from "@/utils/zincutils";
-import useSqlSuggestions from "@/composables/useSuggestions";
 
 export default defineComponent({
   name: "FieldList",
-  props: ["selectedXAxisValue", "selectedYAxisValue", "editMode"],
-  emits: ["update:selectedXAxisValue", "update:selectedYAxisValue"],
-  setup(props) {
+  props: ["editMode"],
+  emits: ["update:streamList"],
+  setup(props, { emit }) {
     const dashboardPanelDataPageKey = inject(
       "dashboardPanelDataPageKey",
       "dashboard"
@@ -1063,6 +1061,7 @@ export default defineComponent({
             }
           }
         }
+        emit("update:streamList");
       } catch (e: any) {
         console.log("Error while extracting fields");
       }
