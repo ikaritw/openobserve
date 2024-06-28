@@ -1398,5 +1398,6 @@ export default defineComponent({
 .fieldList-pagination {
   // min-height: 80px;
   display: flex;
+  padding-bottom: 2rem;
 }
 </style>
