@@ -1904,7 +1904,7 @@ const useLogs = () => {
           content: {
             type: "search_logs",
             trace_id: traceId,
-            query: queryReq,
+            query: queryReq.query,
           },
         })
       );
@@ -2183,7 +2183,7 @@ const useLogs = () => {
               content: {
                 type: "search_logs_histogram",
                 trace_id: traceId,
-                query: queryReq,
+                query: queryReq.query,
               },
             })
           );
