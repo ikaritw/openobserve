@@ -36,6 +36,9 @@ use regex::Regex;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 #[cfg(feature = "enterprise")]
 use {
+    crate::handler::http::request::websocket::ws_utils::{
+        WSInternalMessage, WSMessageType, WEBSOCKET_MSG_CHAN,
+    },
     hashbrown::HashSet,
     o2_enterprise::enterprise::{common::infra::config::O2_CONFIG, search::TaskStatus},
     tonic::{codec::CompressionEncoding, metadata::MetadataValue, transport::Channel, Request},
@@ -47,12 +50,7 @@ use {std::sync::Arc, tokio::sync::Mutex};
 use super::usage::report_request_usage_stats;
 use crate::{
     common::{infra::cluster as infra_cluster, meta::stream::StreamParams},
-    handler::{
-        grpc::request::search::intra_cluster::Searcher,
-        http::request::websocket::ws_utils::{
-            WSInternalMessage, WSMessageType, WEBSOCKET_MSG_CHAN,
-        },
-    },
+    handler::grpc::request::search::intra_cluster::Searcher,
     service::format_partition_key,
 };
 
