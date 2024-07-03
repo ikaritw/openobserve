@@ -1446,7 +1446,10 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
       ].fields.y.length == 0 &&
       dashboardPanelData.data.queries[
         dashboardPanelData.layout.currentQueryIndex
-      ].fields.z.length == 0
+      ].fields.z.length == 0 &&
+      dashboardPanelData.data.queries[
+        dashboardPanelData.layout.currentQueryIndex
+      ].fields.breakdown?.length == 0
     ) {
       return "";
     }
@@ -1461,6 +1464,15 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
       ...dashboardPanelData.data.queries[
         dashboardPanelData.layout.currentQueryIndex
       ].fields.y,
+      ...(dashboardPanelData.data.queries[
+        dashboardPanelData.layout.currentQueryIndex
+      ].fields?.breakdown
+        ? [
+            ...dashboardPanelData.data.queries[
+              dashboardPanelData.layout.currentQueryIndex
+            ].fields.breakdown,
+          ]
+        : []),
       ...(dashboardPanelData.data?.queries[
         dashboardPanelData.layout.currentQueryIndex
       ].fields?.z
@@ -1575,14 +1587,24 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
     const xAxisAlias = dashboardPanelData.data.queries[
       dashboardPanelData.layout.currentQueryIndex
     ].fields.x.map((it: any) => it?.alias);
+
     const yAxisAlias = dashboardPanelData.data.queries[
       dashboardPanelData.layout.currentQueryIndex
     ].fields.y.map((it: any) => it?.alias);
+
+    const bAxisAlias = dashboardPanelData.data.queries[
+      dashboardPanelData.layout.currentQueryIndex
+    ].fields?.breakdown?.map((it: any) => it?.alias);
 
     if (dashboardPanelData.data.type == "heatmap") {
       query +=
         xAxisAlias.length && yAxisAlias.length
           ? " GROUP BY " + xAxisAlias.join(", ") + ", " + yAxisAlias.join(", ")
+          : "";
+    } else if (bAxisAlias?.length) {
+      query +=
+        xAxisAlias.length && bAxisAlias.length
+          ? " GROUP BY " + xAxisAlias.join(", ") + ", " + bAxisAlias.join(", ")
           : "";
     } else {
       query += xAxisAlias.length ? " GROUP BY " + xAxisAlias.join(", ") : "";
@@ -1908,6 +1930,9 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
       ].fields.y,
       dashboardPanelData.data.queries[
         dashboardPanelData.layout.currentQueryIndex
+      ].fields.breakdown,
+      dashboardPanelData.data.queries[
+        dashboardPanelData.layout.currentQueryIndex
       ].fields.z,
       dashboardPanelData.data.queries[
         dashboardPanelData.layout.currentQueryIndex
@@ -2114,11 +2139,11 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
 
           if (
             dashboardData.data.queries[dashboardData.layout.currentQueryIndex]
-              .fields.x.length > 2 ||
+              .fields.x.length > 1 ||
             dashboardData.data.queries[dashboardData.layout.currentQueryIndex]
               .fields.x.length == 0
           ) {
-            errors.push(`Add one or two fields for the X-Axis`);
+            errors.push(`Add one fields for the X-Axis`);
           }
 
           break;
@@ -2174,10 +2199,12 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
           }
           if (
             dashboardData.data.queries[dashboardData.layout.currentQueryIndex]
-              .fields.x.length != 2
+              .fields.x.length != 1 ||
+            dashboardData.data.queries[dashboardData.layout.currentQueryIndex]
+              .fields.breakdown.length != 1
           ) {
             errors.push(
-              `Add exactly two fields on the X-Axis for stacked and h-stacked charts`
+              `Add exactly one fields on the X-Axis and breakdown for stacked, area-stacked and h-stacked charts`
             );
           }
 
@@ -2492,30 +2519,6 @@ const useDashboardPanelData = (pageKey: string = "dashboard") => {
           }
         });
 
-        // Check if the query contains '*'
-        const selectAll = dashboardPanelData.meta.parsedQuery.columns.some(
-          (item: any) => item["expr"]["column"] === "*"
-        );
-
-        // if the query contains '*' allow to select all fields
-        if (selectAll) {
-          // if userdefined fields are selected, add them to the custom query fields
-          // else allow all fields to be selected
-          if (
-            store.state.zoConfig.user_defined_schemas_enabled &&
-            dashboardPanelData.meta.stream.userDefinedSchema.length > 0 &&
-            dashboardPanelData.meta.stream.useUserDefinedSchemas ==
-              "user_defined_schema"
-          ) {
-            dashboardPanelData.meta.stream.customQueryFields = [
-              ...dashboardPanelData.meta.stream.userDefinedSchema,
-            ];
-          } else {
-            dashboardPanelData.meta.stream.customQueryFields = [
-              ...dashboardPanelData.meta.stream.selectedStreamFields,
-            ];
-          }
-        }
         // update the existing x and y axis fields
         updateXYFieldsOnCustomQueryChange(oldCustomQueryFields);
       } else {
