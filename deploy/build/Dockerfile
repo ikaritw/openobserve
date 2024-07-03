@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM public.ecr.aws/docker/library/node:18.20.3-bookworm as webBuilder
+FROM public.ecr.aws/docker/library/node:18.20.3-bookworm AS web-builder
 WORKDIR /web
 COPY ./web /web/
 
@@ -7,7 +7,7 @@ RUN npm install
 RUN NODE_OPTIONS="--max-old-space-size=8192" npm run build
 
 # FROM public.ecr.aws/docker/library/rust:bookworm as builder
-FROM public.ecr.aws/zinclabs/rust:bookworm-sccache as builder
+FROM public.ecr.aws/zinclabs/rust:bookworm-sccache AS builder
 
 # RUN rustup toolchain install nightly-2024-03-02
 # RUN rustup default nightly-2024-03-02
@@ -17,14 +17,16 @@ RUN rustc --version && sccache --version
 
 WORKDIR /openobserve
 COPY . /openobserve
-COPY --from=webBuilder /web/dist web/dist
+COPY --from=web-builder /web/dist web/dist
 
 RUN cargo build --release
 
 # FROM gcr.io/distroless/cc as runtime
-FROM public.ecr.aws/debian/debian:bookworm-slim as runtime
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
-RUN apt-get install -y curl htop iftop sysstat procps lsof net-tools
+FROM public.ecr.aws/debian/debian:bookworm-slim AS runtime
+RUN apt-get update && \
+apt-get install -y --no-install-recommends ca-certificates curl htop iftop sysstat procps lsof net-tools && \
+apt-get clean && \
+rm -rf /var/lib/apt/lists/*
 RUN update-ca-certificates
 COPY --from=builder /openobserve/target/release/openobserve /
 RUN ["/openobserve", "init-dir", "-p", "/data/"]
