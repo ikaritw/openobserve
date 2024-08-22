@@ -78,7 +78,7 @@ pub struct GeoipConfig {
 
 fn default_locale() -> String {
     // Valid locales at the time of writing are: "de”, "en", “es”, “fr”, “ja”,
-    // “pt-BR”, “ru”, and “zh-CN”.
+    // “pt-BR”, “ru”, and “zh-CN”, zh-TW.
     //
     // More information, including the up-to-date list of locales, can be found at
     // https://dev.maxmind.com/geoip/docs/databases/city-and-country?lang=en.

@@ -574,6 +574,11 @@ export default defineComponent({
         icon: "img:" + getImageURL("images/language_flags/tr-turk.svg"),
       },
       {
+        label: "正體中文",
+        code: "zh-tw",
+        icon: "img:" + getImageURL("images/language_flags/zh-tw.svg"),
+      },
+      {
         label: "简体中文",
         code: "zh-cn",
         icon: "img:" + getImageURL("images/language_flags/zh-cn.svg"),

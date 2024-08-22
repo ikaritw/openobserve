@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM public.ecr.aws/docker/library/node:18.20.4-bookworm AS webBuilder
+FROM public.ecr.aws/docker/library/node:18.20.4-bookworm AS webbuilder
 WORKDIR /web
 COPY ./web /web/
 
@@ -29,3 +29,6 @@ RUN update-ca-certificates
 COPY --from=builder /openobserve/target/release/openobserve /
 RUN ["/openobserve", "init-dir", "-p", "/data/"]
 CMD ["/openobserve"]
+
+# 維護人資料和其他標籤
+LABEL version="v0.10.8-cht" maintainer="jazz.lin <jazz.lin@gigabyte.com>"
