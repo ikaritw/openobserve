@@ -1,9 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM public.ecr.aws/docker/library/node:18.20.3-bookworm AS webbuilder
 # 維護人資料和其他標籤
-LABEL maintainer="jazz.lin <jazz.lin@gigabyte.com>" \
-      version="v0.10.7-cht" \
-      description="feat. Chinese Traditional"
+LABEL version="v0.10.8-cht" maintainer="jazz.lin <jazz.lin@gigabyte.com>"
 WORKDIR /web
 COPY ./web /web/
 
