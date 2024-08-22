@@ -54,7 +54,8 @@
 	"expand": "展開",
 	"date": "日期",
 	"description": "描述",
-	"cancelChanges": "取消變更"
+	"cancelChanges": "取消變更",
+	"logs": "Logs"
 	},
   "search": {
 	"selectIndex": "請先選擇串流",
@@ -117,7 +118,8 @@
 	"allFieldsWarningMsg": "當結構描述中的欄位數量非常多時，搜尋速度可能會很慢，請適當選擇所需的欄位。",
 	"regionFilterMsg": "搜尋地區/叢集",
 	"queryRangeRestrictionMsg": "查詢範圍限制在 {range}。請依需要調整日期範圍。否則，開始日期將自動調整以符合允許的限制。",
-	"cancel": "取消查詢"
+	"cancel": "取消查詢",
+	"viewTrace": "查看追蹤"
 	},
   "menu": {
 	"home": "首頁",
@@ -361,7 +363,9 @@
 	"delete": "刪除",
 	"deleteIndex": "刪除資料流",
 	"confirmDeleteHead": "刪除資料流",
+	"confirmBatchDeleteHead":"刪除這些資料流",
 	"confirmDeleteMsg": "您確定要刪除這個資料流嗎？",
+	"confirmBatchDeleteMsg":"您確定要刪除這些資料流嗎？",
 	"cancel": "取消",
 	"ok": "確定",
 	"docsCount": "文件數量",
@@ -401,7 +405,8 @@
 		"search": "搜尋工作流程",
 		"routing": "路由",
 		"nodes": "節點",
-		"associateFunction": "關聯函數"
+		"associateFunction": "關聯函數",
+		"derivedStream": "衍生資料流"
 		},
   "function": {
 	"header": "函數",
@@ -680,7 +685,7 @@
 	"scheduledAlert": "排程警報",
 	"rtAlert": "即時警報",
 	"noData": "無擷取資料",
-	"findIngestion": "了解如何擷取日誌 >>",
+	"findIngestion": "了解如何擷取資料 >>",
 	"ingestionMsg": "看起來您尚未向所選組織擷取任何資料，有多種方式可以擷取資料，例如 fluentbit。",
 	"inestedInSearch": "嘗試日誌搜尋",
 	"searchInDemoOrg": "您可以通過切換到示範組織來探索搜尋功能，若要切換到示範組織，請使用頂部的組織下拉選單選擇“示範組織”。我們會不斷向示範組織擷取虛擬資料。"
@@ -841,7 +846,7 @@
     "updateuserKey": "更新使用者金鑰",
     "id": "ID",
     "update": "更新",
-    "generalLabel": "設定",
+    "generalLabel": "一般設定",
     "queryManagement": "查詢管理",
     "apikeyLabel": "API 金鑰",
     "generalPageTitle": "一般設定",
@@ -853,7 +858,11 @@
     "deleteLogoMessage": "您確定要刪除這個 Logo 圖片嗎？點選確定刪除。",
     "deleteLogo": "刪除 Logo",
     "logo": "Logo",
-    "customLogoText": "自訂 Logo 文字"
+    "customLogoText": "自訂 Logo 文字",
+    "orgLabel": "組織參數",
+    "logDetails": "日誌詳細資訊",
+    "traceIdFieldName": "追蹤 ID 欄位名稱",
+    "spanIdFieldName": "區段 ID 欄位名稱"
   },
   "reports": {
     "header": "報表",
@@ -882,6 +891,11 @@
     "status": "狀態",
     "cancelQuery": "取消查詢",
     "queryRange": "查詢範圍",
-    "refreshQuery": "重新整理查詢"
-}
+    "refreshQuery": "重新整理查詢",
+    "queryType": "查詢類型"
+  },
+  "traces": {
+    "viewLogs": "檢視日誌",
+    "backToLogs": "返回日誌"
+  }
 }

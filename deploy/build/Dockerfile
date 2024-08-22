@@ -31,4 +31,4 @@ RUN ["/openobserve", "init-dir", "-p", "/data/"]
 CMD ["/openobserve"]
 
 # 維護人資料和其他標籤
-LABEL version="v0.10.8-cht" maintainer="jazz.lin <jazz.lin@gigabyte.com>"
+LABEL version="v0.10.9-cht" maintainer="jazz.lin <jazz.lin@gigabyte.com>"
