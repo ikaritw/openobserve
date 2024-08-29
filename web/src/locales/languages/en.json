@@ -119,7 +119,9 @@
     "regionFilterMsg": "Search Region/Cluster",
     "queryRangeRestrictionMsg": "The query range is restricted to {range}. Please adjust the date range accordingly. Otherwise, the start date will be automatically adjusted to fit within the allowed limit.",
     "cancel": "Cancel query",
-    "viewTrace": "View Trace"
+    "viewTrace": "View Trace",
+    "flattened": "Flattened",
+    "unflattened": "Unflattened"
   },
   "menu": {
     "home": "Home",
@@ -570,6 +572,11 @@
     "unitLabel": "Unit",
     "basemapLabel": "Base Map",
     "customunitLabel": "Custom Unit",
+    "currencyDollar": "Currency - Dollar ($)",
+    "currencyEuro": "Currency - Euro (€)",
+    "currencyPound": "Currency - Pound (£)",
+    "currencyYen": "Currency - Yen (¥)",
+    "currencyRupees": "Currency - Indian Rupees (₹)",
     "latitudeLabel": "Latitude",
     "longitudeLabel": "Longitude",
     "zoomLabel": "Zoom",
@@ -617,6 +624,7 @@
     "percent1": "Percent (0.0-1.0)",
     "percent": "Percent (0-100)",
     "custom": "Custom",
+    "currency":"Currency",
     "count": "Count",
     "countDistinct": "Count (Distinct)",
     "sum": "Sum",
@@ -742,6 +750,7 @@
     "header": "Alerts",
     "add": "Add alert",
     "edit": "Edit",
+    "clone": "Clone alert",
     "search": "Search alert",
     "name": "Name",
     "save": "Save",
@@ -783,7 +792,9 @@
     "groupBy": "Group by",
     "row": "Row Template",
     "preview": "Preview",
-    "crontitle": "Enable Cron"
+    "crontitle": "Enable Cron",
+    "lastTriggered":"Last Triggered At",
+    "owner": "Owner"
   },
   "alert_templates": {
     "header": "Templates",

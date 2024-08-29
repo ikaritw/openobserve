@@ -18,7 +18,7 @@ import { useI18n } from "vue-i18n";
 import { reactive, ref, type Ref, toRaw, nextTick, onBeforeMount } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import { cloneDeep, remove } from "lodash-es";
+import { cloneDeep } from "lodash-es";
 
 import {
   useLocalLogFilterField,
@@ -123,7 +123,6 @@ const defaultObject = {
       showPagination: true,
     },
     scrollInfo: {},
-    flagWrapContent: false,
     pageType: "logs", // 'logs' or 'stream
     regions: [],
     clusters: [],
@@ -164,6 +163,8 @@ const defaultObject = {
       currentDateTime: new Date(),
       currentPage: 1,
       columns: <any>[],
+      colOrder: <any>{},
+      colSizes: <any>{},
     },
     transforms: <any>[],
     queryResults: <any>[],
@@ -978,7 +979,6 @@ const useLogs = () => {
 
         // const parsedSQL = parser.astify(req.query.sql);
         // const unparsedSQL = parser.sqlify(parsedSQL);
-        // console.log(unparsedSQL);
       }
 
       // in case of sql mode or disable histogram to get total records we need to set track_total_hits to true
@@ -1499,7 +1499,6 @@ const useLogs = () => {
   const getQueryData = async (isPagination = false) => {
     try {
       // searchObj.data.histogram.chartParams.title = "";
-      console.log("=================== Start Debug ===================");
       searchObjDebug["queryDataStartTime"] = performance.now();
       searchObj.meta.showDetailTab = false;
       searchObj.meta.searchApplied = true;
@@ -1525,12 +1524,6 @@ const useLogs = () => {
       searchObjDebug["buildSearchStartTime"] = performance.now();
       const queryReq: any = buildSearch();
       searchObjDebug["buildSearchEndTime"] = performance.now();
-      console.log(
-        `Build Search operation took ${
-          searchObjDebug["buildSearchEndTime"] -
-          searchObjDebug["buildSearchStartTime"]
-        } milliseconds to complete`,
-      );
       if (queryReq == false) {
         throw new Error(notificationMsg.value || "Something went wrong.");
       }
@@ -1540,12 +1533,6 @@ const useLogs = () => {
         searchObjDebug["partitionStartTime"] = performance.now();
         await getQueryPartitions(queryReq);
         searchObjDebug["partitionEndTime"] = performance.now();
-        console.log(
-          `Partition operation took ${
-            searchObjDebug["partitionEndTime"] -
-            searchObjDebug["partitionStartTime"]
-          } milliseconds to complete`,
-        );
       }
 
       if (queryReq != null) {
@@ -1664,12 +1651,6 @@ const useLogs = () => {
         searchObjDebug["paginatedDatawithAPIStartTime"] = performance.now();
         await getPaginatedData(queryReq);
         searchObjDebug["paginatedDatawithAPIEndTime"] = performance.now();
-        console.log(
-          `Get Paginated Data with API took ${
-            searchObjDebug["paginatedDatawithAPIEndTime"] -
-            searchObjDebug["paginatedDatawithAPIStartTime"]
-          } milliseconds to complete`,
-        );
         const parsedSQL: any = fnParsedSQL();
 
         if (
@@ -1702,7 +1683,6 @@ const useLogs = () => {
                 errorDetail: "",
               };
             } else {
-              // console.log(searchObj.data.queryResults.partitionDetail.paginations)
               searchObjDebug["histogramStartTime"] = performance.now();
               searchObj.data.histogram.errorMsg = "";
               searchObj.data.histogram.errorCode = 0;
@@ -1722,19 +1702,24 @@ const useLogs = () => {
               if (isTimestampASC(parsedSQL?.orderby) && partitions.length > 1) {
                 partitions.reverse();
               }
+
               await generateHistogramSkeleton();
+
               for (const partition of partitions) {
                 searchObj.data.histogramQuery.query.start_time = partition[0];
                 searchObj.data.histogramQuery.query.end_time = partition[1];
                 await getHistogramQueryData(searchObj.data.histogramQuery);
-                setTimeout(async () => {
-                  await generateHistogramData();
-                  refreshPartitionPagination(true);
-                }, 100);
+                if (partitions.length > 1) {
+                  setTimeout(async () => {
+                    await generateHistogramData();
+                    refreshPartitionPagination(true);
+                  }, 100);
+                }
               }
               searchObj.loadingHistogram = false;
             }
           }
+          await generateHistogramData();
           refreshPartitionPagination(true);
         } else if (searchObj.meta.sqlMode && !isNonAggregatedQuery(parsedSQL)) {
           searchObj.data.histogram = {
@@ -1763,12 +1748,6 @@ const useLogs = () => {
               searchObjDebug["pagecountStartTime"] = performance.now();
               await getPageCount(queryReq);
               searchObjDebug["pagecountEndTime"] = performance.now();
-              console.log(
-                `Total count took ${
-                  searchObjDebug["pagecountEndTime"] -
-                  searchObjDebug["pagecountStartTime"]
-                } milliseconds to complete`,
-              );
             }, 0);
           }
 
@@ -1794,13 +1773,6 @@ const useLogs = () => {
         }
       }
       searchObjDebug["queryDataEndTime"] = performance.now();
-      console.log(
-        `Entire operation took ${
-          searchObjDebug["queryDataEndTime"] -
-          searchObjDebug["queryDataStartTime"]
-        } milliseconds to complete`,
-      );
-      console.log("=================== getQueryData Debug ===================");
     } catch (e: any) {
       searchObj.loading = false;
       showErrorNotification(
@@ -2282,12 +2254,6 @@ const useLogs = () => {
 
           searchObj.loading = false;
           searchObjDebug["paginatedDataReceivedEndTime"] = performance.now();
-          console.log(
-            `Paginated data time after response received from server took ${
-              searchObjDebug["paginatedDataReceivedEndTime"] -
-              searchObjDebug["paginatedDataReceivedStartTime"]
-            } milliseconds to complete`,
-          );
 
           resolve(true);
         })
@@ -2369,12 +2335,11 @@ const useLogs = () => {
         searchObj.loadingHistogram = false;
         searchObj.data.isOperationCancelled = false;
 
-        searchObj.data.histogram.errorCode = 429;
-        notificationMsg.value = "Search operation was cancelled";
-        searchObj.data.histogram.errorMsg =
-          "Error while fetching histogram data.";
-        searchObj.data.histogram.errorDetail = "Search operation was cancelled";
-
+        if (!searchObj.data.histogram?.xData?.length) {
+          notificationMsg.value = "Search query was cancelled";
+          searchObj.data.histogram.errorMsg = "Search query was cancelled";
+          searchObj.data.histogram.errorDetail = "Search query was cancelled";
+        }
         return;
       }
 
@@ -2398,8 +2363,8 @@ const useLogs = () => {
             removeTraceId(traceId);
             searchObjDebug["histogramProcessingStartTime"] = performance.now();
             searchObj.loading = false;
-            if(searchObj.data.queryResults.aggs == null)  {
-                searchObj.data.queryResults.aggs = [];                
+            if (searchObj.data.queryResults.aggs == null) {
+              searchObj.data.queryResults.aggs = [];
             }
             searchObj.data.queryResults.aggs.push(...res.data.hits);
             searchObj.data.queryResults.scan_size += res.data.scan_size;
@@ -2423,66 +2388,49 @@ const useLogs = () => {
 
             searchObjDebug["histogramProcessingEndTime"] = performance.now();
             searchObjDebug["histogramEndTime"] = performance.now();
-            console.log(
-              `Histogram processing after data received took ${
-                searchObjDebug["histogramProcessingEndTime"] -
-                searchObjDebug["histogramProcessingStartTime"]
-              } milliseconds to complete`,
-            );
-            console.log(
-              `Entire Histogram took ${
-                searchObjDebug["histogramEndTime"] -
-                searchObjDebug["histogramStartTime"]
-              } milliseconds to complete`,
-            );
-            console.log("=================== End Debug ===================");
             dismiss();
             resolve(true);
           })
           .catch((err) => {
             searchObj.loadingHistogram = false;
             let trace_id = "";
-            searchObj.data.histogram.errorMsg =
-              typeof err == "string" && err
-                ? err
-                : "Error while processing histogram request.";
-            if (err.response != undefined) {
-              searchObj.data.histogram.errorMsg = err.response.data.error;
-              if (err.response.data.hasOwnProperty("trace_id")) {
-                trace_id = err.response.data?.trace_id;
+
+            if (err?.request?.status != 429) {
+              searchObj.data.histogram.errorMsg =
+                typeof err == "string" && err
+                  ? err
+                  : "Error while processing histogram request.";
+              if (err.response != undefined) {
+                searchObj.data.histogram.errorMsg = err.response.data.error;
+                if (err.response.data.hasOwnProperty("trace_id")) {
+                  trace_id = err.response.data?.trace_id;
+                }
+              } else {
+                searchObj.data.histogram.errorMsg = err.message;
+                if (err.hasOwnProperty("trace_id")) {
+                  trace_id = err?.trace_id;
+                }
               }
-            } else {
-              searchObj.data.histogram.errorMsg = err.message;
-              if (err.hasOwnProperty("trace_id")) {
-                trace_id = err?.trace_id;
-              }
-            }
 
-            const customMessage = logsErrorMessage(err?.response?.data.code);
-            searchObj.data.histogram.errorCode = err?.response?.data.code;
-            searchObj.data.histogram.errorDetail =
-              err?.response?.data?.error_detail;
-
-            if (customMessage != "") {
-              searchObj.data.histogram.errorMsg = t(customMessage);
-            }
-
-            notificationMsg.value = searchObj.data.histogram.errorMsg;
-
-            if (err?.request?.status >= 429) {
-              notificationMsg.value = err?.response?.data?.message;
-              searchObj.data.histogram.errorMsg = err?.response?.data?.message;
+              const customMessage = logsErrorMessage(err?.response?.data.code);
+              searchObj.data.histogram.errorCode = err?.response?.data.code;
               searchObj.data.histogram.errorDetail =
                 err?.response?.data?.error_detail;
-            }
 
-            if (trace_id) {
-              searchObj.data.histogram.errorMsg +=
-                " <br><span class='text-subtitle1'>TraceID:" +
-                trace_id +
-                "</span>";
-              notificationMsg.value += " TraceID:" + trace_id;
-              trace_id = "";
+              if (customMessage != "") {
+                searchObj.data.histogram.errorMsg = t(customMessage);
+              }
+
+              notificationMsg.value = searchObj.data.histogram.errorMsg;
+
+              if (trace_id) {
+                searchObj.data.histogram.errorMsg +=
+                  " <br><span class='text-subtitle1'>TraceID:" +
+                  trace_id +
+                  "</span>";
+                notificationMsg.value += " TraceID:" + trace_id;
+                trace_id = "";
+              }
             }
 
             reject(false);
@@ -2492,8 +2440,8 @@ const useLogs = () => {
           });
       } catch (e: any) {
         dismiss();
-        searchObj.data.histogram.errorMsg = e.message;
-        searchObj.data.histogram.errorCode = e.code;
+        // searchObj.data.histogram.errorMsg = e.message;
+        // searchObj.data.histogram.errorCode = e.code;
         searchObj.loadingHistogram = false;
         notificationMsg.value = searchObj.data.histogram.errorMsg;
         showErrorNotification("Error while fetching histogram data");
@@ -2864,19 +2812,17 @@ const useLogs = () => {
               commonSchemaFields.unshift("dummylabel");
               // searchObj.data.stream.expandGroupRowsFieldCount["common"] = searchObj.data.stream.expandGroupRowsFieldCount["common"] + 1;
             }
-            //here we check whether timestamp field is present or not 
+            //here we check whether timestamp field is present or not
             //as we append timestamp dynamically for userDefined schema we need to check this
-              if(userDefineSchemaSettings.includes(
+            if (
+              userDefineSchemaSettings.includes(
                 store.state.zoConfig?.timestamp_column,
-              )){
-                searchObj.data.hasSearchDataTimestampField = true;
-
-              }
-              else{
-                searchObj.data.hasSearchDataTimestampField = false;
-
-              }
-
+              )
+            ) {
+              searchObj.data.hasSearchDataTimestampField = true;
+            } else {
+              searchObj.data.hasSearchDataTimestampField = false;
+            }
 
             // check for user defined schema is false then only consider checking new fields from result set
             if (
@@ -2952,14 +2898,6 @@ const useLogs = () => {
           updateFieldKeywords(searchObj.data.stream.selectedStreamFields);
       }
       searchObjDebug["extractFieldsEndTime"] = performance.now();
-      console.log(
-        `ExtractFields ${
-          searchObjDebug["extractFieldsWithAPI"]
-        } operation took ${
-          searchObjDebug["extractFieldsEndTime"] -
-          searchObjDebug["extractFieldsStartTime"]
-        } milliseconds to complete`,
-      );
     } catch (e: any) {
       searchObj.loadingStream = false;
       console.log("Error while extracting fields.", e);
@@ -2999,6 +2937,11 @@ const useLogs = () => {
 
       const parsedSQL: any = fnParsedSQL();
 
+      // By default when no fields are selected. Timestamp and Source will be visible. If user selects field, then only selected fields will be visible in table
+      // In SQL and Quick mode.
+      // If user adds timestamp manually then only we get it in response.
+      // If we don’t add timestamp and add timestamp to table it should show invalid date.
+
       if (searchObj.data.stream.selectedFields.length == 0) {
         searchObj.meta.resultGrid.manualRemoveFields = false;
         if (
@@ -3013,8 +2956,9 @@ const useLogs = () => {
           )
         ) {
           searchObj.data.resultGrid.columns.push({
-            name: "@timestamp",
-            field: (row: any) =>
+            name: store.state.zoConfig.timestamp_column,
+            id: store.state.zoConfig.timestamp_column,
+            accessorFn: (row: any) =>
               timestampToTimezoneDate(
                 row[store.state.zoConfig.timestamp_column] / 1000,
                 store.state.timezone,
@@ -3027,27 +2971,41 @@ const useLogs = () => {
                 "yyyy-MM-dd HH:mm:ss.SSS",
               ),
             label: t("search.timestamp") + ` (${store.state.timezone})`,
+            header: t("search.timestamp") + ` (${store.state.timezone})`,
             align: "left",
             sortable: true,
+            enableResizing: false,
+            meta: {
+              closable: false,
+              showWrap: false,
+              wrapContent: false,
+            },
+            size: 225,
           });
         }
 
         if (searchObj.data.stream.selectedFields.length == 0) {
           searchObj.data.resultGrid.columns.push({
             name: "source",
-            field: (row: any) => JSON.stringify(row),
-            prop: (row: any) => JSON.stringify(row),
-            label: "source",
-            align: "left",
+            id: "source",
+            accessorFn: (row: any) => JSON.stringify(row),
+            cell: (info: any) => info.getValue(),
+            header: "source",
             sortable: true,
+            enableResizing: false,
+            meta: {
+              closable: false,
+              showWrap: false,
+              wrapContent: false,
+            },
           });
         }
       } else {
-        // searchObj.data.stream.selectedFields.forEach((field: any) => {
         if (searchObj.data.hasSearchDataTimestampField == true) {
           searchObj.data.resultGrid.columns.unshift({
-            name: "@timestamp",
-            field: (row: any) =>
+            name: store.state.zoConfig.timestamp_column,
+            id: store.state.zoConfig.timestamp_column,
+            accessorFn: (row: any) =>
               timestampToTimezoneDate(
                 row[store.state.zoConfig.timestamp_column] / 1000,
                 store.state.timezone,
@@ -3060,32 +3018,69 @@ const useLogs = () => {
                 "yyyy-MM-dd HH:mm:ss.SSS",
               ),
             label: t("search.timestamp") + ` (${store.state.timezone})`,
+            header: t("search.timestamp") + ` (${store.state.timezone})`,
             align: "left",
             sortable: true,
+            enableResizing: false,
+            meta: {
+              closable: false,
+              showWrap: false,
+              wrapContent: false,
+            },
+            size: 225,
           });
         }
+
+        let sizes: any;
+        if (
+          searchObj.data.resultGrid.colSizes &&
+          searchObj.data.resultGrid.colSizes.hasOwnProperty(
+            searchObj.data.stream.selectedStream,
+          )
+        ) {
+          sizes =
+            searchObj.data.resultGrid.colSizes[
+              searchObj.data.stream.selectedStream
+            ];
+        }
+
         for (const field of searchObj.data.stream.selectedFields) {
           if (field != store.state.zoConfig.timestamp_column) {
+            let foundKey, foundValue;
+
+            if (sizes.length > 0) {
+              Object.keys(sizes[0]).forEach((key) => {
+                const trimmedKey = key
+                  .replace(/^--(header|col)-/, "")
+                  .replace(/-size$/, "");
+                if (trimmedKey === field) {
+                  foundKey = key;
+                  foundValue = sizes[0][key];
+                }
+              });
+            }
+
             searchObj.data.resultGrid.columns.push({
               name: field,
-              field: (row: { [x: string]: any; source: any }) => {
+              id: field,
+              accessorFn: (row: { [x: string]: any; source: any }) => {
                 return byString(row, field);
               },
-              prop: (row: { [x: string]: any; source: any }) => {
-                return byString(row, field);
-              },
-              label: field,
-              align: "left",
+              header: field,
               sortable: true,
-              closable: true,
-              showWrap: true,
-              wrapContent: false,
+              enableResizing: true,
+              meta: {
+                closable: true,
+                showWrap: true,
+                wrapContent: false,
+              },
+              size: foundValue || 250,
+              maxSize: window.innerWidth,
             });
           }
         }
       }
       extractFTSFields();
-      evaluateWrapContentFlag();
     } catch (e: any) {
       searchObj.loadingStream = false;
       console.log("Error while updating grid columns");
@@ -3224,7 +3219,6 @@ const useLogs = () => {
 
         searchObj.data.queryResults.total = num_records;
       }
-      // console.log("xData", xData);
 
       const chartParams = {
         title: getHistogramTitle(),
@@ -3521,6 +3515,7 @@ const useLogs = () => {
       console.log("Error while loading logs data");
     }
   };
+  const saveColumnSizes = () => {};
 
   const handleRunQuery = async () => {
     try {
@@ -3708,31 +3703,6 @@ const useLogs = () => {
     if (ftsFields.value.length == 0) {
       ftsFields.value = store.state.zoConfig.default_fts_keys;
     }
-  };
-
-  const evaluateWrapContentFlag = () => {
-    // Initialize a flag to false
-    let flag = false;
-
-    // Iterate through the array of objects
-    for (const item of searchObj.data.resultGrid.columns) {
-      // Check if the item's name is 'source' (the static field)
-      // if (item.name.toLowerCase() === "source") {
-      //   flag = true; // Set the flag to true if 'source' exists
-      // }
-      // Check if the item's name is in the ftsFields array
-      if (ftsFields.value.includes(item.name.toLowerCase())) {
-        flag = true; // Set the flag to true if an ftsField exists
-      }
-
-      // If the flag is already true, no need to continue checking
-      if (flag) {
-        searchObj.meta.flagWrapContent = flag;
-        break;
-      }
-    }
-
-    searchObj.meta.flagWrapContent = flag;
   };
 
   const getSavedViews = async () => {
@@ -4018,7 +3988,6 @@ const useLogs = () => {
     handleRunQuery,
     generateHistogramData,
     extractFTSFields,
-    evaluateWrapContentFlag,
     getSavedViews,
     onStreamChange,
     generateURLQuery,
