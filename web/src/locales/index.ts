@@ -17,6 +17,7 @@ import { createI18n } from "vue-i18n"; // import from runtime only
 import { getLanguage } from "../utils/cookies";
 
 // User defined lang
+import twLocale from "./languages/tw.json";
 import zhLocale from "./languages/zh.json";
 import enLocale from "./languages/en.json";
 import trLocale from "./languages/tr.json";
@@ -32,6 +33,9 @@ import ptLocale from "./languages/pt.json";
 const messages = {
   "en-gb": {
     ...enLocale,
+  },
+  "zh-tw": {
+    ...twLocale,
   },
   "zh-cn": {
     ...zhLocale,
